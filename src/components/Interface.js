@@ -13,11 +13,14 @@ const [data,setData] = useState([]);
 .then(json => setData(json));
 }
 return(
+    <>
+      <div style={{display: "flex", alignItems: "center", justifyContent:"center",marginTop:"10px",}}>
+       <button style={{ width: "12rem" ,padding:"8px 10px 8px 10px",borderWidth:"1px",borderRadius:"10px" }} onClick={handleClick} >Get Data</button>
+      </div>
 
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
 
-    <button style={{ width: "10%" }} onClick={handleClick} >Get Data</button>
-    {data.map((item) => (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent:"center", }}>
+      {data.map((item) => (
         <Card key = {item.id} 
         firstname = {item.first_name}
         middlename= {item.middle_name}
@@ -25,8 +28,9 @@ return(
         img={item.avatar}
         mail={item.email}
          />
-    ))}
-    </div>
+      ))}
+      </div>
+    </> 
 )
 }
 
