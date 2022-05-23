@@ -1,7 +1,4 @@
 
-@media (max-width:500px){
-
-}
 
 
 
@@ -9,9 +6,7 @@
 
 
 
-
-
-{/*
+/*
   .App {
   text-align: center;
 }
@@ -50,4 +45,18 @@
     transform: rotate(360deg);
   }
 }
-*/}
+*/
+
+
+
+/* media screen and (max-width:500px){
+  .card{
+    width:50%;
+    flex-direction:row;
+    flex:wrap;
+    align-items: center;
+    
+  }
+}
+
+*/
