@@ -7,14 +7,15 @@ import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import moment from "moment";
-import ModeEditRoundedIcon from '@mui/icons-material/ModeEditRounded';
+//import ModeEditRoundedIcon from '@mui/icons-material/ModeEditRounded';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
+import { useMemo } from "react";
 
 
 
-/* modal  Styling */
+/* row user information modal styling */
 const style = {
   position: "absolute",
   top: "50%",
@@ -37,8 +38,49 @@ const style = {
 
 
 function Interface() {
-  const columns = React.useMemo(
-    () =>[
+  const [data, setData] = useState(null);
+  const apiUrl = "https://61dddb4af60e8f0017668ac5.mockapi.io/api/v1/Users";
+  const [open, setOpen] = useState(false);
+  
+  const handleClose = () => setOpen(false);
+  
+  let [uData, setUserData] = useState({});
+
+  
+  
+  /*getting data and storing in the json object*/
+  useEffect(() => {
+    fetch(apiUrl)
+      .then((res) => res.json())
+      .then((json) => setData(json))
+  }, [data]);
+
+
+  /*delete user with react-confirm popup */
+  const deleteUser = React.useCallback(
+    (id) => () => {
+      confirmAlert({
+        title: 'Confirm to submit',
+        message: 'Are you sure to do this.',
+        buttons: [
+          {
+            label: 'Yes',
+            onClick: () => fetch(apiUrl+'/'+id,{method:"DELETE"}),
+          },
+          {
+            label: 'No',
+            onClick: () =>''
+          }
+        ]
+      });
+    },
+    [],
+  ); 
+
+
+  
+  const columns = useMemo(
+    (data) =>{ return [
       {
         field: 'actions',
         headerName:"Actions",
@@ -59,33 +101,13 @@ function Interface() {
     { field: "email", headerName: "Mail", width: 250,renderHeader: () => (<strong>{'Mail'}</strong>),},
     { field: "city", headerName: "City", width: 200,renderHeader: () => (<strong>{'City'}</strong>),},
     { field: "zip", headerName: "Zip Code", width: 200 , renderHeader: () => (<strong>{'Zip'}</strong>),},
-  ]);
+  ]});
   
-const apiUrl = "https://61dddb4af60e8f0017668ac5.mockapi.io/api/v1/Users";
-
-  const [data, setData] = useState(null);
- 
-  const [open, setOpen] = useState(false);
-  
-  const handleClose = () => setOpen(false);
 
 
-  
-  let [uData, setUserData] = useState({});
   
  
   
-
-  /*getting data and storing in the json object*/
-
-  useEffect(() => {
-    fetch(apiUrl)
-      .then((res) => res.json())
-      .then((json) => setData(json))
-  }, [data]);
-
-
-
   /* add new random user */
   const addUser = (e) => {
     e.preventDefault();
@@ -93,9 +115,9 @@ const apiUrl = "https://61dddb4af60e8f0017668ac5.mockapi.io/api/v1/Users";
   };
 
   
-
+  /* DataGrid onRowClick onclick handle*/
   const handleOpen = (e) => {
-    console.log(e); 
+      console.log(e); 
       setUserData({
       createdAt: e.row.createdAt,
       first_name: e.row.first_name,
@@ -112,31 +134,13 @@ const apiUrl = "https://61dddb4af60e8f0017668ac5.mockapi.io/api/v1/Users";
     setOpen(true);
 
   };
-
-
-  const deleteUser = React.useCallback(
-    (id) => () => {
-      confirmAlert({
-        title: 'Confirm to submit',
-        message: 'Are you sure to do this.',
-        buttons: [
-          {
-            label: 'Yes',
-            onClick: () => fetch(apiUrl+'/'+id,{method:"DELETE"}),
-          },
-          {
-            label: 'No',
-            onClick: () =>''
-          }
-        ]
-      });
-    },
-    [],
-  );
-
-
   
-
+  
+  
+  
+  
+  
+  
   
   return (
     <>
@@ -174,9 +178,7 @@ const apiUrl = "https://61dddb4af60e8f0017668ac5.mockapi.io/api/v1/Users";
               open={open}
               onClose={handleClose}
               aria-labelledby="modal-modal-title"
-              aria-describedby="modal-modal-description" 
-               
-              
+              aria-describedby="modal-modal-description"   
             >
             <Box sx={style}>
                  <Typography style={{display:'flex',alignItems:'center',justifyContent:'center'}}>
