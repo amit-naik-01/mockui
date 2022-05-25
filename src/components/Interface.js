@@ -11,10 +11,12 @@ import ModeEditRoundedIcon from '@mui/icons-material/ModeEditRounded';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
+import { useMemo } from "react";
+import FormDialog from "./FormDialog";
 
 
 
-/* modal  Styling */
+/* user-information modal styling */
 const style = {
   position: "absolute",
   top: "50%",
@@ -32,88 +34,62 @@ const style = {
 };
 
 
-
+const initialValue = { first_name:"",last_name:"", email:"",}
 
 
 
 function Interface() {
-  const columns = React.useMemo(
-    () =>[
-      {
-        field: 'actions',
-        headerName:"Actions",
-        type: 'actions',
-        width: 140,
-        align:'center',
-        renderHeader: () => (<strong>{'Actions'}</strong>),
-        getActions: (params) => [
-          <GridActionsCellItem
-            icon={<DeleteIcon />}
-            label="Delete"
-            onClick={deleteUser(params.id)}
-          />,
-        ],
-      },
-    { field: "first_name", headerName: "First Name", width: 200,renderHeader: () => (<strong>{'First Name'}</strong>),},
-    { field: "last_name", headerName: "Last Name", width: 190,renderHeader: () => (<strong>{'Last Name'}</strong>),},
-    { field: "email", headerName: "Mail", width: 250,renderHeader: () => (<strong>{'Mail'}</strong>),},
-    { field: "city", headerName: "City", width: 200,renderHeader: () => (<strong>{'City'}</strong>),},
-    { field: "zip", headerName: "Zip Code", width: 200 , renderHeader: () => (<strong>{'Zip'}</strong>),},
-  ]);
-  
-const apiUrl = "https://61dddb4af60e8f0017668ac5.mockapi.io/api/v1/Users";
-
   const [data, setData] = useState(null);
- 
+  const apiUrl = "https://61dddb4af60e8f0017668ac5.mockapi.io/api/v1/Users";
+
+  let [uData, setUserData] = useState({});                    /*onrowclick user information state*/
+  const [formData,setFormData] =useState({initialValue});     /*add new user state */
+
   const [open, setOpen] = useState(false);
-  
   const handleClose = () => setOpen(false);
-
-
   
-  let [uData, setUserData] = useState({});
   
  
+
+  const [open1, setOpen1] = React.useState(false);
+    const handleClickOpen = () => {
+    setOpen1(true);
+  };
+
+  const handleClose1 = () => {
+    setOpen1(false);
+  };
+
   
-
+  
   /*getting data and storing in the json object*/
-
   useEffect(() => {
     fetch(apiUrl)
       .then((res) => res.json())
       .then((json) => setData(json))
-  }, [data]);
+  }, []);
 
-
-
-  /* add new random user */
-  const addUser = (e) => {
-    e.preventDefault();
-    fetch(apiUrl, { method: "post" });
-  };
-
+  /* Tracking Input*/
+  const onChange = (e) => {
+    const { value, id } = e.target;
+    setFormData({ ...formData, [id]: value });
+  }
   
+  /* on submit of new user */
+  const handleFormSubmit =() => {
+    fetch(apiUrl, {
+      method: "POST", body: JSON.stringify(formData), headers: {
+        'content-type': "application/json"
+      }
+    }).then(resp => resp.json())
+      .then(resp => {
+        handleClose1()
+        setData()
+        setFormData(initialValue)
+      })
+  }
 
-  const handleOpen = (e) => {
-    console.log(e); 
-      setUserData({
-      createdAt: e.row.createdAt,
-      first_name: e.row.first_name,
-      middle_name: e.row.middle_name,
-      last_name: e.row.last_name,
-      avatar: e.row.avatar,
-      email: e.row.email,
-      zip: e.row.zip,
-      city: e.row.city,
-      state: e.row.state,
-      country: e.row.country,
-      id: e.row.id
-    })
-    setOpen(true);
-
-  };
-
-
+  /*delete user with react-confirm popup */
   const deleteUser = React.useCallback(
     (id) => () => {
       confirmAlert({
@@ -132,11 +108,69 @@ const apiUrl = "https://61dddb4af60e8f0017668ac5.mockapi.io/api/v1/Users";
       });
     },
     [],
-  );
+  ); 
 
 
   
+  const columns = useMemo(
+    (data) =>{ return [
+      {
+        field: 'actions',
+        headerName:"Actions",
+        type: 'actions',
+        width: 140,
+        align:'center',
+        renderHeader: () => (<strong>{'Actions'}</strong>),
+        getActions: (params) => [
+          <GridActionsCellItem
+            icon={<DeleteIcon />}
+            label="Delete"
+            onClick={deleteUser(params.id)}
+            />
+            ,
+            <GridActionsCellItem
+            icon={<ModeEditRoundedIcon />}
+            label="Delete"
+            onClick={() => console.log("pressed")}
+          />,
+        ],
+      },
+    { field: "first_name", headerName: "First Name", width: 200,renderHeader: () => (<strong>{'First Name'}</strong>),},
+    { field: "last_name", headerName: "Last Name", width: 190,renderHeader: () => (<strong>{'Last Name'}</strong>),},
+    { field: "email", headerName: "Mail", width: 250,renderHeader: () => (<strong>{'Mail'}</strong>),},
+    { field: "city", headerName: "City", width: 200,renderHeader: () => (<strong>{'City'}</strong>),},
+    { field: "zip", headerName: "Zip Code", width: 200 , renderHeader: () => (<strong>{'Zip'}</strong>),},
+  ]});
 
+
+
+  
+  /* DataGrid onRowClick onclick handle*/
+  const handleOpen = (e) => {
+      console.log(e); 
+      setUserData({
+      createdAt: e.row.createdAt,
+      first_name: e.row.first_name,
+      middle_name: e.row.middle_name,
+      last_name: e.row.last_name,
+      avatar: e.row.avatar,
+      email: e.row.email,
+      zip: e.row.zip,
+      city: e.row.city,
+      state: e.row.state,
+      country: e.row.country,
+      id: e.row.id
+    })
+    setOpen(true);
+
+  };
+  
+  
+  
+  
+  
+  
+  
   
   return (
     <>
@@ -150,7 +184,7 @@ const apiUrl = "https://61dddb4af60e8f0017668ac5.mockapi.io/api/v1/Users";
       >
         <h1 style={{ justifyContent: "flex-start" }}>Users</h1>
         <Button
-          onClick={addUser}
+          onClick={handleClickOpen}
           style={{ justifyContent: "flex-end", height: "40px" }}
           variant="outlined"
         >
@@ -158,9 +192,9 @@ const apiUrl = "https://61dddb4af60e8f0017668ac5.mockapi.io/api/v1/Users";
         </Button>
       </div>
       
-      <div style={{ height: "1000px" }}>
+      <div style={{ height: "1000px", marginBottom: "50px"}}>
         {data && (
-          <div style={{ height: "100%", width: "100%" }}>
+          <div style={{ height: "100%", width: "100%", }}>
  
             <DataGrid
               style={{ display: "flex", margin: "0 35px 0 35px" }}
@@ -169,14 +203,12 @@ const apiUrl = "https://61dddb4af60e8f0017668ac5.mockapi.io/api/v1/Users";
               pageSize={100}
               onRowClick={handleOpen}
             />
-            <GridTableRowsIcon />
+            
             <Modal
               open={open}
               onClose={handleClose}
               aria-labelledby="modal-modal-title"
-              aria-describedby="modal-modal-description" 
-               
-              
+              aria-describedby="modal-modal-description"   
             >
             <Box sx={style}>
                  <Typography style={{display:'flex',alignItems:'center',justifyContent:'center'}}>
@@ -201,7 +233,10 @@ const apiUrl = "https://61dddb4af60e8f0017668ac5.mockapi.io/api/v1/Users";
             
           </div>
         )}
+
+        <FormDialog open={open1} handleClose={handleClose1} data={formData} onChange={onChange} handleFormSubmit={handleFormSubmit}/>
       </div>
+      
     </>
   );
 }
