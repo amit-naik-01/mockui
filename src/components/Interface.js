@@ -1,7 +1,7 @@
 import { useState } from "react";
 import * as React from 'react';
 import { useEffect } from "react";
-import { GridActionsCellItem,DataGrid, GridTableRowsIcon } from "@mui/x-data-grid";
+import { GridActionsCellItem,DataGrid } from "@mui/x-data-grid";
 import Button from "@mui/material/Button";
 import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
@@ -11,8 +11,10 @@ import ModeEditRoundedIcon from '@mui/icons-material/ModeEditRounded';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
-import { useMemo } from "react";
+import { useMemo,useCallback } from "react";
 import FormDialog from "./FormDialog";
+
+
 
 
 
@@ -34,7 +36,7 @@ const style = {
 };
 
 
-const initialValue = { first_name:"",last_name:"", email:"",}
+const initialValue = { first_name:"",last_name:"", email:""}
 
 
 
@@ -43,75 +45,39 @@ function Interface() {
   const apiUrl = "https://61dddb4af60e8f0017668ac5.mockapi.io/api/v1/Users";
 
   let [uData, setUserData] = useState({});                    /*onrowclick user information state*/
-  const [formData,setFormData] =useState({initialValue});     /*add new user state */
-
-  const [open, setOpen] = useState(false);
+  const [formData,setFormData] =useState(initialValue);     /*add new user and edit user state */
+                
+  const [open, setOpen] = useState(false);                    /* info pop handle  */
   const handleClose = () => setOpen(false);
   
   
  
-
-  const [open1, setOpen1] = React.useState(false);
-    const handleClickOpen = () => {
-    setOpen1(true);
+  /* for new user and edit user dialog handle */
+  const [openDialog, setOpenDialog] = useState(false);
+  const handleClickOpenDialog = () => {
+    setOpenDialog(true);
+  };
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setFormData({})
   };
 
-  const handleClose1 = () => {
-    setOpen1(false);
-  };
 
-  
-  
   /*getting data and storing in the json object*/
-  useEffect(() => {
+  const getUsers = () => {
     fetch(apiUrl)
       .then((res) => res.json())
       .then((json) => setData(json))
+  }
+  
+  
+  
+  useEffect(() => {
+    getUsers()
   }, []);
 
-  /* Tracking Input*/
-  const onChange = (e) => {
-    const { value, id } = e.target;
-    setFormData({ ...formData, [id]: value });
-  }
-  
-  /* on submit of new user */
-  const handleFormSubmit =() => {
-    fetch(apiUrl, {
-      method: "POST", body: JSON.stringify(formData), headers: {
-        'content-type': "application/json"
-      }
-    }).then(resp => resp.json())
-      .then(resp => {
-        handleClose1()
-        setData()
-        setFormData(initialValue)
-      })
-  }
-
-  /*delete user with react-confirm popup */
-  const deleteUser = React.useCallback(
-    (id) => () => {
-      confirmAlert({
-        title: 'Confirm to submit',
-        message: 'Are you sure to do this.',
-        buttons: [
-          {
-            label: 'Yes',
-            onClick: () => fetch(apiUrl+'/'+id,{method:"DELETE"}),
-          },
-          {
-            label: 'No',
-            onClick: () =>''
-          }
-        ]
-      });
-    },
-    [],
-  ); 
 
 
-  
   const columns = useMemo(
     (data) =>{ return [
       {
@@ -130,8 +96,8 @@ function Interface() {
             ,
             <GridActionsCellItem
             icon={<ModeEditRoundedIcon />}
-            label="Delete"
-            onClick={() => console.log("pressed")}
+            label="Edit"
+            onClick={() => {handleUpdate(params)}}
           />,
         ],
       },
@@ -143,31 +109,91 @@ function Interface() {
   ]});
 
 
+  /* Tracking Input*/
+  const onChange = (e) => {
+    const { value, id } = e.target;
+    console.log(value,id)
+    setFormData({ ...formData, [id]: value });
+  }
 
-  
+
   /* DataGrid onRowClick onclick handle*/
   const handleOpen = (e) => {
-      console.log(e); 
-      setUserData({
-      createdAt: e.row.createdAt,
-      first_name: e.row.first_name,
-      middle_name: e.row.middle_name,
-      last_name: e.row.last_name,
-      avatar: e.row.avatar,
-      email: e.row.email,
-      zip: e.row.zip,
-      city: e.row.city,
-      state: e.row.state,
-      country: e.row.country,
-      id: e.row.id
-    })
-    setOpen(true);
-
+    console.log(e); 
+    setUserData({
+    createdAt: e.row.createdAt,
+    first_name: e.row.first_name,
+    middle_name: e.row.middle_name,
+    last_name: e.row.last_name,
+    avatar: e.row.avatar,
+    email: e.row.email,
+    zip: e.row.zip,
+    city: e.row.city,
+    state: e.row.state,
+    country: e.row.country,
+    id: e.row.id
+  })
+  setOpen(true);
   };
   
+  /*delete user with react-confirm popup */
+  const deleteUser = useCallback(
+    (id) => () => {
+      confirmAlert({
+        title: 'Confirm to delete',
+        message: 'Are you sure to do this.',
+        buttons: [
+          {
+            label: 'Yes',
+            onClick: () => {fetch(apiUrl+'/'+id,{method:"DELETE"}).then(resp => resp.json()).then(resp => getUsers())},
+          },
+          {
+            label: 'No',
+            onClick: () =>''
+          }
+        ]
+      });
+    },
+    [],
+  ); 
+
   
+
+
   
-  
+ /* handle onclick in edit button and open  */
+  const handleUpdate = (oldData) => {
+    setFormData({first_name: oldData.row.first_name,
+      last_name: oldData.row.last_name,
+      email: oldData.row.email,
+      id: oldData.id});
+    handleClickOpenDialog();
+  } 
+
+
+  /* on edit and on submit  */
+  const handleFormSubmit = () => {
+    if(formData.id){
+      fetch(apiUrl + `/${formData.id}`, {
+      method: "PUT", body: JSON.stringify(formData), headers: {
+      'content-type': "application/json"
+      }}).then(resp => resp.json())
+      .then(resp => {
+        handleCloseDialog()
+        getUsers()
+      })  
+    }else{
+      /* on submit of new user */
+      fetch(apiUrl, {
+      method: "POST", body: JSON.stringify(formData), headers: {
+      'content-type': "application/json"
+      }}).then(resp => resp.json())
+      .then(resp => {
+          handleCloseDialog()
+          getUsers()      
+      })
+    }
+  }
   
   
   
@@ -184,7 +210,7 @@ function Interface() {
       >
         <h1 style={{ justifyContent: "flex-start" }}>Users</h1>
         <Button
-          onClick={handleClickOpen}
+          onClick={handleClickOpenDialog}
           style={{ justifyContent: "flex-end", height: "40px" }}
           variant="outlined"
         >
@@ -195,7 +221,6 @@ function Interface() {
       <div style={{ height: "1000px", marginBottom: "50px"}}>
         {data && (
           <div style={{ height: "100%", width: "100%", }}>
- 
             <DataGrid
               style={{ display: "flex", margin: "0 35px 0 35px" }}
               rows={data}
@@ -203,7 +228,6 @@ function Interface() {
               pageSize={100}
               onRowClick={handleOpen}
             />
-            
             <Modal
               open={open}
               onClose={handleClose}
@@ -226,17 +250,11 @@ function Interface() {
                  <Typography style={{display:'flex',marginLeft:"20px", alignItems:'center',justifyContent:'center'}}>{uData.zip} </Typography>
                  <Typography style={{display:'flex',marginLeft:"20px", alignItems:'center',justifyContent:'center'}}>Date created: {moment(uData.createdAt).format('MMMM Do YYYY, h:mm:ss a')} </Typography>
             </Box>
-            </Modal>
-          
-
-           
-            
+            </Modal>  
           </div>
         )}
-
-        <FormDialog open={open1} handleClose={handleClose1} data={formData} onChange={onChange} handleFormSubmit={handleFormSubmit}/>
-      </div>
-      
+        <FormDialog open={openDialog} handleClose={handleCloseDialog} data={formData} onChange={onChange} handleFormSubmit={handleFormSubmit}/>        
+      </div>   
     </>
   );
 }
