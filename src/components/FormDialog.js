@@ -20,11 +20,11 @@ export default function FormDialog({open,handleClose,data,onChange,handleFormSub
         
       >
         <DialogTitle style={{display:"flex",justifyContent:"center"}} id="alert-dialog-title">
-          {id?"Update User":"Add New User"}
+          {id?<h2 style={{display:"flex",justifyContent:"center",margin:"0px"}}><strong>Update User</strong></h2>:<h2 style={{display:"flex",justifyContent:"center",margin:"0px"}}><strong>Add New User</strong></h2>}
         </DialogTitle>
         <DialogContent>
           <form >
-             <TextField id="firstName" defaultValue={first_name} onChange={e=>onChange(e)} placeholder="First Name" label="First Name" size="small" style={{margin:"0 0 5px 0"}}  fullWidth/> 
+             <TextField id="firstName" defaultValue={first_name} onChange={e=>onChange(e)} placeholder="First Name" label="First Name" size="small" style={{margin:"8px 0 5px 0"}}  fullWidth/> 
              <TextField id="lastName" defaultValue={last_name} onChange={e=>onChange(e)} placeholder="Last Name" label="Last Name" size="small" style={{margin:"5px 0 5px 0"}}  fullWidth/> 
              <TextField id="email" defaultValue={email} onChange={e=>onChange(e)} placeholder="Email" label="Email" size="small" style={{margin:"5px 0 0 0"}}  fullWidth/> 
           </form>  
